@@ -1,0 +1,6 @@
+#!/usr/bin/env bash                       
+
+project_branch='proj/{{proj}}'
+project_path=$(echo $(realpath $(dirname $0)) | sed 's#/.git/hooks##')
+
+git --work-tree=$project_path checkout $project_branch  -f
