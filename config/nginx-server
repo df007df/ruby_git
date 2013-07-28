@@ -1,0 +1,55 @@
+server {
+    server_name {{server_name}};
+
+    root {{root}};
+
+    error_log {{log_path}}{{server_name}}-error.log error;
+
+    access_log {{log_path}}{{server_name}}-access.log combined;
+
+    location /global/svgweb/ {
+        break;
+    }
+
+    location /global/jquery/extend/uploadify/ {
+        break;
+    }
+
+    location /global/pdf2swf/ {
+        break;
+    }
+
+    location /form/render/ueditor/ { 
+        break; 
+    }
+
+    location /favicon.ico {
+        break;
+        access_log off;
+        log_not_found off;
+    }
+
+    location / {
+        rewrite . /index.php;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+}
+
+server {
+    server_name {{static_name}};
+
+    root {{root}};
+
+    location / {
+        access_log off;
+    }
+
+    location ~ \.php$ {
+        deny all;
+    }
+}
