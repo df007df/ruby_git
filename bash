@@ -1,3 +1,8 @@
-#!/usr/bin bash  
-echo $(dirname $0)
-echo $(realpath $(dirname $0))
+#!/usr/bin bash
+
+str1= "/home/df007df/www/run/config/main.php"
+
+
+#echo str1
+
+echo ${str1//gg/ww}

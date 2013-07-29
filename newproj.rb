@@ -14,7 +14,7 @@ DB_PWD  = '123456'
 
 
 BARE_HOST = '127.0.0.1'
-BARE_PATH = '/home/git/benq.git/'
+BARE_PATH = '/home/git/saas.git/'
 BARE_USER = 'git'
 BARE_PASS = '123456'
 
@@ -78,13 +78,13 @@ end
 def replaceString(file, write, str = nil)
 	buffer = ''
 	File.open(file) do |fr|
-		buffer = fr.read
+		buffer = fr.read.to_s
 		if write.is_a?(Hash)			
 			write.each do |index, item|
-				buffer = buffer.gsub("{{#{index}}}", item.to_s)
+				buffer.gsub!(/\{\{#{index}\}\}/, item.to_s)
 			end	
 		else	
-			buffer = fr.read.gsub(Regexp.new(str), write)		
+			buffer.gsub!(Regexp.new(str), write)		
 		end
 	end
 	buffer	
@@ -129,7 +129,7 @@ end
 
 def checkRemote(barnch, ssh) 
 	barnchs = ssh.exec!("cd #{BARE_PATH}; git remote")
-	if barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
+	if barnchs && barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
 		true
@@ -194,16 +194,20 @@ end
 
 def addMemcached(proj) 
 	confFile = PATH + 'tools/memcache/config'
+	port = 0
 	File.open(confFile) do |fr|
 		hosts = fr.read
 		lasthost = ''
-		if hosts.split(/\n/).select{|line| lasthost = line; line =~ /^#{proj}/ }.empty?
+		proj_host = hosts.split(/\n/).select{|line| lasthost = line; line =~ /^#{proj}/ }
+		if proj_host.empty?
 			port = lasthost.split(':')[1].to_i + 1
 			port = port < 11212 ? 11212 : port
 			`echo "#{proj}:#{port}" >> #{confFile}`
+		else
+			port = proj_host[0].split(':')[1].to_i
 		end
 	end
-	
+	port
 end	
 
 
@@ -248,11 +252,15 @@ def getDbUserName(proj)
 	'AySaas_' + proj
 end	
 
+def getDbPwd(proj)
+	'123456'
+end	
+
 def addDbUser(proj)
 	dbconfig = PATH + 'config/user.sql'
 	str = {
 	    'dbuser' => getDbUserName(proj),
-		'password' => '123456',
+		'password' => getDbPwd(proj),
 		'host' =>  'localhost',
 		'dbname' => getProjDomain(proj),
 	}
@@ -271,70 +279,62 @@ def getAppName(proj)
 end	
 
 def setMain(proj) 
-
 	addMainPath = getProjPath(proj) + 'config/config_main.php'
+
 	mainPath = PATH + 'config/main.php'
-
-	memcache = [{'host' => '192.168.0.231', 'port' => 11211 , 'weight' => 50}]
-
-	storage = {'192.168.0.231' => 'd1'}
-
-	database = [{'group' => '0', 'rules' => '/.+s`.+`/ix' , 'master' => {
-		'name' => 'root',
-		'host' => 'localhost',
-		'dbname' => 'www.oa.aysaas.com',
-		'user' => 'root',
-		'password' => '123456',
-		} 
-
-	}]
-
-
 	configs = {
 		'APP_NAME' => getAppName(proj),
 		'ROOT_DOMAIN' => getProjDomain(proj).sub('www.', ''),
+		'M_S' => '192.168.0.231',
+		'M_S_P' => addMemcached(proj),
 
-		'MEMCACHE' => MultiJson.dump(memcache),
-		'STORAGE' => MultiJson.dump(storage),
-		'DATABASE' => MultiJson.dump(database)
+		'S_T' => proj,
+
+		'D_NAME' => 'localhost',
+		'D_HOST' => '127.0.0.1',
+		'D_DB' => getProjDomain(proj),
+		'D_USER' => getDbUserName(proj),
+		'D_PWD' => getDbPwd(proj)
 	}
-
 	configs = replaceString(mainPath, configs);
 
 	tmp_main = PATH + 'tmp_main.php'
+	`echo "#{configs}" > #{addMainPath}`
+end	
 
-	`echo #{configs} > #{tmp_main}`
 
-	#puts configs
+def chmodFile(proj)
+	uploadPath = getProjPath(proj) + 'upload/'
+	logPath = getProjPath(proj) + 'log'
+	`sudo chmod 666 #{uploadPath}`
+	`sudo chmod 666 #{logPath}`
+end	
+
+def copyFileIo
 
 
 end	
 
-
-def toArray()
-
-
-end	
+proj = 'df'
 
 
+ projpath = getProjPath(proj)
+ initGit(projpath)
+ cPostUpdate(proj)
 
-proj = 'aahh'
+ loginSSH(BARE_HOST, BARE_USER, BARE_PASS){|ssh| 
+ 	addProjRemote(proj, ssh);
+ 	ssh.loop
+ }
+
+buildWeb(proj)
+
+addDbUser(proj)
+addMemcached(proj)
+startMemcached(proj);
 
 
 setMain(proj)
 
-#addDbUser(proj)
 
-#addMemcached(proj)
-#startMemcached(proj);
 
-# projpath = getProjPath(proj)
-# initGit(projpath)
-# cPostUpdate(proj)
-
-# loginSSH(BARE_HOST, BARE_USER, BARE_PASS){|ssh| 
-# 	addProjRemote(proj, ssh);
-# 	ssh.loop
-# }
-
-#buildWeb(proj)
