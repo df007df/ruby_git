@@ -1,0 +1,1 @@
+df007df  20637 20635  0 15:06 pts/4    00:00:00 sh -c ps -ef | grep 'memcached' | grep 11214 > log

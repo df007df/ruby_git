@@ -1,16 +1,22 @@
 #!/user/bin/ruby
 
 require 'pathname'
-
+require 'net/ssh'
+require 'multi_json'
 
 PROJ_HOST = '127.0.0.1'  #248
 PROJ_PATH = '/home/df007df/www/'
 PROJ_USER = 'df007df'
 NGINX_PATH = '/etc/nginx/'
 
+DB_USER = 'root'
+DB_PWD  = '123456'
+
+
 BARE_HOST = '127.0.0.1'
 BARE_PATH = '/home/git/benq.git/'
-
+BARE_USER = 'git'
+BARE_PASS = '123456'
 
 COPY_BRANCH = 'master'
 
@@ -72,15 +78,14 @@ end
 def replaceString(file, write, str = nil)
 	buffer = ''
 	File.open(file) do |fr|
-		if write.is_a?(Hash)
-			buffer = fr.read
+		buffer = fr.read
+		if write.is_a?(Hash)			
 			write.each do |index, item|
-				buffer = buffer.gsub("{{#{index}}}", item)
+				buffer = buffer.gsub("{{#{index}}}", item.to_s)
 			end	
 		else	
-			buffer = fr.read.sub(Regexp.new(str), write)		
-		end	
-		#
+			buffer = fr.read.gsub(Regexp.new(str), write)		
+		end
 	end
 	buffer	
 end	
@@ -108,13 +113,22 @@ end
 
 
 
+
+
+
+
 ############# bare-git host
 
-def checkRemote(barnch) 
-	Dir.chdir(BARE_PATH)
+def loginSSH(host, user, password)
+	Net::SSH.start( host, user, :password => password ) do |ssh|
+	   yield ssh	
+	end
+end	
 
-	barnchs = `git remote`
 
+
+def checkRemote(barnch, ssh) 
+	barnchs = ssh.exec!("cd #{BARE_PATH}; git remote")
 	if barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
@@ -122,11 +136,8 @@ def checkRemote(barnch)
 	end	
 end	
 
-def checkBranch(barnch) 
-	Dir.chdir(BARE_PATH)
-
-	barnchs = `git branch`
-
+def checkBranch(barnch, ssh) 
+	barnchs = ssh.exec!("cd #{BARE_PATH}; git branch")
 	if barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
@@ -134,13 +145,15 @@ def checkBranch(barnch)
 	end	
 end
 
-def copyBranch(newBarnch, copyBarnch) 
+def copyBranch(newBarnch, copyBarnch, ssh) 
 
-	if checkBranch(copyBarnch)
+	if checkBranch(copyBarnch, ssh)
 
-		if !checkBranch(newBarnch)
-			copy = `sudo -u git git branch #{newBarnch} #{copyBarnch}`
-			push = `sudo -u git git push #{newBarnch} #{newBarnch}:#{newBarnch}`
+		if !checkBranch(newBarnch, ssh)
+			cddir = "cd #{BARE_PATH};"
+			copy = ssh.exec!("#{cddir} git branch #{newBarnch} #{copyBarnch}")
+			push = ssh.exec!("#{cddir} git push #{newBarnch} #{newBarnch}:#{newBarnch}")
+
 		else
 			p 'newbranch is exits: ' + newBarnch
 			exit
@@ -155,26 +168,48 @@ end
 
 
 
-def addProjRemote(proj)
+def addProjRemote(proj, ssh)
 	#need ssh login  gem net-ssh 
-
-	#bare git path
 	projpath = getProjPath(proj)
 	barnch = getBranch(proj)
-	Dir.chdir(BARE_PATH)
+	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
 
-	#git remote add proj/newproj git@192.168.0.248:/var/www/www.newproj.aysaas.com
-	addremote = "sudo -u git git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
+	 if !checkRemote(barnch, ssh)
+	 	ssh.exec "cd #{BARE_PATH}; #{addremote}"
+	 	copyBranch(barnch, COPY_BRANCH, ssh)
+	 else
+	 	p "#{barnch} remote is exists"	
+	 end	
 
-	#check remote
-	if !checkRemote(barnch)
-		`#{addremote}`
-		copyBranch(barnch, COPY_BRANCH)
-	else
-		p "#{barnch} remote is exists"	
-	end	
+end	
 
 
+
+
+
+################  bulidWEB  ##################
+
+
+
+
+def addMemcached(proj) 
+	confFile = PATH + 'tools/memcache/config'
+	File.open(confFile) do |fr|
+		hosts = fr.read
+		lasthost = ''
+		if hosts.split(/\n/).select{|line| lasthost = line; line =~ /^#{proj}/ }.empty?
+			port = lasthost.split(':')[1].to_i + 1
+			port = port < 11212 ? 11212 : port
+			`echo "#{proj}:#{port}" >> #{confFile}`
+		end
+	end
+	
+end	
+
+
+def startMemcached(proj)
+	path = PATH + 'tools/memcache/start.rb'
+	puts `ruby #{path}`
 end	
 
 
@@ -207,42 +242,99 @@ def buildWeb(proj)
 
 end	
 
+	
 
-def setMain() 
+def getDbUserName(proj)
+	'AySaas_' + proj
+end	
 
-	config = {
-		'proj' => ,
-		'domain' => ,
-		'cookie_domain' => ,
-		'static_domain' => ,
-		'fileio_domain' => ,
-		'port_memcache' => ,
-		'dbname' => ,
-		'dbuser' => ,
-		'dbpassword' => 
+def addDbUser(proj)
+	dbconfig = PATH + 'config/user.sql'
+	str = {
+	    'dbuser' => getDbUserName(proj),
+		'password' => '123456',
+		'host' =>  'localhost',
+		'dbname' => getProjDomain(proj),
 	}
 
+	sql = replaceString(dbconfig, str);
+
+	tmpfile = PATH + 'tmp_user.sql'
+	`echo "#{sql}" > #{tmpfile}`
+	puts `mysql --user=#{DB_USER} --password=#{DB_PWD} < #{tmpfile}`
+	`rm #{tmpfile}`
+end	
+
+
+def getAppName(proj)
+	'AYSaaS-' + proj
+end	
+
+def setMain(proj) 
+
+	addMainPath = getProjPath(proj) + 'config/config_main.php'
+	mainPath = PATH + 'config/main.php'
+
+	memcache = [{'host' => '192.168.0.231', 'port' => 11211 , 'weight' => 50}]
+
+	storage = {'192.168.0.231' => 'd1'}
+
+	database = [{'group' => '0', 'rules' => '/.+s`.+`/ix' , 'master' => {
+		'name' => 'root',
+		'host' => 'localhost',
+		'dbname' => 'www.oa.aysaas.com',
+		'user' => 'root',
+		'password' => '123456',
+		} 
+
+	}]
+
+
+	configs = {
+		'APP_NAME' => getAppName(proj),
+		'ROOT_DOMAIN' => getProjDomain(proj).sub('www.', ''),
+
+		'MEMCACHE' => MultiJson.dump(memcache),
+		'STORAGE' => MultiJson.dump(storage),
+		'DATABASE' => MultiJson.dump(database)
+	}
+
+	configs = replaceString(mainPath, configs);
+
+	tmp_main = PATH + 'tmp_main.php'
+
+	`echo #{configs} > #{tmp_main}`
+
+	#puts configs
+
+
+end	
+
+
+def toArray()
 
 
 end	
 
 
 
+proj = 'aahh'
 
 
+setMain(proj)
 
-proj = 'df'
+#addDbUser(proj)
 
-buildWeb(proj)
+#addMemcached(proj)
+#startMemcached(proj);
 
-=begin
-	
-projpath = getProjPath(proj)
-initGit(projpath)
-cPostUpdate(proj)
+# projpath = getProjPath(proj)
+# initGit(projpath)
+# cPostUpdate(proj)
 
-addProjRemote(proj)
+# loginSSH(BARE_HOST, BARE_USER, BARE_PASS){|ssh| 
+# 	addProjRemote(proj, ssh);
+# 	ssh.loop
+# }
 
-buildWeb(proj)
-
-=end
+#buildWeb(proj)
