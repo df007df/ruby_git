@@ -53,3 +53,30 @@ server {
         deny all;
     }
 }
+
+
+server {
+    server_name {{fileio_name}};
+
+    root {{root}};
+
+    error_log {{log_path}}{{server_name}}-error.log error;
+
+    access_log {{log_path}}{{server_name}}-access.log combined;
+
+    client_max_body_size 64m;
+
+    location /crossdomain.xml {
+        break;
+    }
+
+    location / {
+        rewrite . /index.php;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+}

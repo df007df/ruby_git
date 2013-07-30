@@ -1,25 +1,10 @@
 #!/user/bin/ruby
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 
 require 'pathname'
 require 'net/ssh'
 require 'multi_json'
-
-PROJ_HOST = '127.0.0.1'  #248
-PROJ_PATH = '/home/df007df/www/'
-PROJ_USER = 'df007df'
-NGINX_PATH = '/etc/nginx/'
-
-DB_USER = 'root'
-DB_PWD  = '123456'
-
-
-BARE_HOST = '127.0.0.1'
-BARE_PATH = '/home/git/saas.git/'
-BARE_USER = 'git'
-BARE_PASS = '123456'
-
-COPY_BRANCH = 'master'
-
+require 'config'
 
 
 PATH = Pathname.new(File.dirname(__FILE__)).realpath.to_s + '/'
@@ -49,7 +34,19 @@ def getBranch(proj)
 end	
 
 
-def initGit(path) 
+
+def getOldProj(proj)
+
+	if proj == 'safirst'
+		PROJ_PATH + 'oa.a-y.com.cn/'
+	else	
+		PROJ_PATH + getProjDomain(proj) + '/'
+	end	
+
+end	
+
+def initGit(proj) 
+	path = getProjPath(proj)
 	if !File.exists?path
     	`sudo mkdir #{path}`
     end	
@@ -59,6 +56,10 @@ def initGit(path)
     `cd '#{path}'`
 
 	`sudo -u #{PROJ_USER} git init #{path}`
+
+	rmOrigin = "sudo -u #{PROJ_USER} git remote rm origin" #del clone remote
+	delBranch = "sudo -u #{PROJ_USER} git branch -D "
+
 	`sudo -u #{PROJ_USER} git config -f #{path}.git/config receive.denyCurrentBranch ignore`
     
     config = `sudo -u #{PROJ_USER} git config --get -f #{path}.git/config receive.denyCurrentBranch`
@@ -129,7 +130,7 @@ end
 
 def checkRemote(barnch, ssh) 
 	barnchs = ssh.exec!("cd #{BARE_PATH}; git remote")
-	if barnchs && barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
+	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
 		true
@@ -138,7 +139,7 @@ end
 
 def checkBranch(barnch, ssh) 
 	barnchs = ssh.exec!("cd #{BARE_PATH}; git branch")
-	if barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
+	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
 		true
@@ -152,8 +153,6 @@ def copyBranch(newBarnch, copyBarnch, ssh)
 		if !checkBranch(newBarnch, ssh)
 			cddir = "cd #{BARE_PATH};"
 			copy = ssh.exec!("#{cddir} git branch #{newBarnch} #{copyBarnch}")
-			push = ssh.exec!("#{cddir} git push #{newBarnch} #{newBarnch}:#{newBarnch}")
-
 		else
 			p 'newbranch is exits: ' + newBarnch
 			exit
@@ -173,10 +172,13 @@ def addProjRemote(proj, ssh)
 	projpath = getProjPath(proj)
 	barnch = getBranch(proj)
 	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
+	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
 
 	 if !checkRemote(barnch, ssh)
 	 	ssh.exec "cd #{BARE_PATH}; #{addremote}"
 	 	copyBranch(barnch, COPY_BRANCH, ssh)
+	 	ssh.exec "cd #{BARE_PATH}; #{pushProj}"
+
 	 else
 	 	p "#{barnch} remote is exists"	
 	 end	
@@ -221,13 +223,14 @@ end
 
 def buildWeb(proj)
 
-	projPath = getProjPath(proj)
+	projPublicPath = getProjPath(proj) + 'public'
 
 	str = {
 	    'server_name' => getProjDomain(proj),
-		'root' => projPath,
+		'root' => projPublicPath,
 		'log_path' =>  '/var/log/nginx/',
-		'static_name' => getProjDomain(proj, :static)
+		'static_name' => getProjDomain(proj, :static),
+		'fileio_name' => getProjDomain(proj, :fileio)
 	}
 
 	config_nginx_file = PATH + 'config/nginx-server'
@@ -303,38 +306,57 @@ def setMain(proj)
 end	
 
 
+
+
+#######  end ############
+
 def chmodFile(proj)
 	uploadPath = getProjPath(proj) + 'upload/'
 	logPath = getProjPath(proj) + 'log'
+	`sudo mkdir #{uploadPath}`
 	`sudo chmod 666 #{uploadPath}`
 	`sudo chmod 666 #{logPath}`
 end	
 
-def copyFileIo
 
+def composer()
+	#ln -s
 
 end	
 
-proj = 'df'
+
+def initData(proj)
+	Dir.chdir(getProjPath(proj))
+	p `pwd`
+	`ENV=production ./script/phpming.php migrate`
+end	
+
+def copyFileIo
+
+end	
 
 
- projpath = getProjPath(proj)
- initGit(projpath)
- cPostUpdate(proj)
 
- loginSSH(BARE_HOST, BARE_USER, BARE_PASS){|ssh| 
- 	addProjRemote(proj, ssh);
- 	ssh.loop
+
+
+
+proj = 'ts'
+
+ initGit(proj) #ok
+  cPostUpdate(proj) #ok
+
+  loginSSH(BARE_HOST, BARE_USER, BARE_PASS){|ssh| 
+  	addProjRemote(proj, ssh);
  }
 
-buildWeb(proj)
+buildWeb(proj)   #ok
 
-addDbUser(proj)
-addMemcached(proj)
-startMemcached(proj);
+addDbUser(proj)  #ok
+addMemcached(proj) #ok
+startMemcached(proj); #ok
 
 
 setMain(proj)
-
-
+chmodFile(proj)
+#initData(proj)
 
