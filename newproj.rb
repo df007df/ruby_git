@@ -152,7 +152,7 @@ def copyBranch(newBarnch, copyBarnch, ssh)
 
 		if !checkBranch(newBarnch, ssh)
 			cddir = "cd #{BARE_PATH};"
-			copy = ssh.exec!("#{cddir} git branch #{newBarnch} #{copyBarnch}")
+			copy = ssh.exec!("sudo su git; #{cddir} git branch #{newBarnch} #{copyBarnch}")
 		else
 			p 'newbranch is exits: ' + newBarnch
 			exit
