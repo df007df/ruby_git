@@ -138,7 +138,7 @@ def checkRemote(barnch, ssh)
 end	
 
 def checkBranch(barnch, ssh) 
-	barnchs = ssh.exec!("cd #{BARE_PATH}; git branch")
+	barnchs = ssh.exec!("sudo su git; cd #{BARE_PATH}; git branch")
 	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
