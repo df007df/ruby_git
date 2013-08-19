@@ -174,7 +174,13 @@ def addProjRemote(proj, ssh)
 	barnch = getBranch(proj)
 	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
 	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
-
+          
+          p 'sdsd'
+          
+          p ssh.exec "id; pwd;"
+          
+          p 'noma'
+          
 	 if !checkRemote(barnch, ssh)
 	 	p ssh.exec!("sudo su git; cd #{BARE_PATH}; #{addremote}")
 	 	copyBranch(barnch, COPY_BRANCH, ssh)
