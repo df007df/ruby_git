@@ -230,6 +230,7 @@ def buildWeb(proj)
 
 	str = {
 	    'server_name' => getProjDomain(proj),
+	    'server_port' => HOST_PORT,
 		'root' => projPublicPath,
 		'log_path' =>  '/var/log/nginx/',
 		'static_name' => getProjDomain(proj, :static),
