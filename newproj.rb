@@ -129,7 +129,7 @@ end
 
 
 def checkRemote(barnch, ssh) 
-	barnchs = ssh.exec!("sudo su git; cd #{BARE_PATH}; git remote")
+	barnchs = ssh.exec!("cd #{BARE_PATH}; git remote")
 	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
@@ -138,7 +138,7 @@ def checkRemote(barnch, ssh)
 end	
 
 def checkBranch(barnch, ssh) 
-	barnchs = ssh.exec!("sudo su git; cd #{BARE_PATH}; git branch")
+	barnchs = ssh.exec!("cd #{BARE_PATH}; git branch")
 	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
@@ -152,7 +152,7 @@ def copyBranch(newBarnch, copyBarnch, ssh)
 
 		if !checkBranch(newBarnch, ssh)
 			cddir = "cd #{BARE_PATH};"
-			copy = ssh.exec!("sudo su git; #{cddir} git branch #{newBarnch} #{copyBarnch}")
+			copy = ssh.exec!("#{cddir} git branch #{newBarnch} #{copyBarnch}")
 			p copy
 		else
 			p 'newbranch is exits: ' + newBarnch
@@ -176,10 +176,9 @@ def addProjRemote(proj, ssh)
 	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
         
           p ssh.exec! "id; pwd;"
+   
           
-          p ssh.exec! "sudo su git; id; pwd;"
-          
-          p ssh.exec! "sudo su git; cd ~/; id; pwd;"
+          p ssh.exec! "cd /home/git; pwd;"
           
           exit
           
