@@ -13,7 +13,7 @@ File.open(PATH + confFile) do |fr|
 	 	if `#{query}` != ''
 	 		puts info[0] + ' is running'
 	 	else
-	 		start = `memcached -d -p '#{info[1].to_i}' -l "127.0.0.1" -u "memcache"`
+	 		#start = `memcached -d -p '#{info[1].to_i}' -l "127.0.0.1" -u "memcache"`
 	 		puts info[0] + ' memcached is restart!!'
 	 	end	
 
