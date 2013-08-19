@@ -1,4 +1,7 @@
 server {
+    
+    listen 8000;
+    
     server_name {{server_name}};
 
     root {{root}};
@@ -41,6 +44,9 @@ server {
 }
 
 server {
+    
+    listen 8000;
+    
     server_name {{static_name}};
 
     root {{root}};
@@ -56,6 +62,9 @@ server {
 
 
 server {
+    
+    listen 8000;
+    
     server_name {{fileio_name}};
 
     root {{root}};
