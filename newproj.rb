@@ -129,7 +129,7 @@ end
 
 
 def checkRemote(barnch, ssh) 
-	barnchs = ssh.exec!("cd #{BARE_PATH}; git remote")
+	barnchs = ssh.exec!("sudo su git; cd #{BARE_PATH}; git remote")
 	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		false
 	else
