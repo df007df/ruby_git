@@ -3,6 +3,7 @@ PROJ_HOST = '192.168.0.70'  #248
 PROJ_PATH = '/var/www/'
 PROJ_USER = 'saas'
 NGINX_PATH = '/etc/nginx/'
+HOST_PORT = 8000
 
 DB_USER = 'root'
 DB_PWD  = 'AnYuan'
