@@ -1,6 +1,6 @@
 server {
     
-    listen 8000;
+    listen {{server_port}};
     
     server_name {{server_name}};
 
@@ -45,7 +45,7 @@ server {
 
 server {
     
-    listen 8000;
+    listen {{server_port}};
     
     server_name {{static_name}};
 
@@ -63,7 +63,7 @@ server {
 
 server {
     
-    listen 8000;
+    listen {{server_port}};
     
     server_name {{fileio_name}};
 
