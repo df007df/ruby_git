@@ -343,7 +343,7 @@ end
 
 
 
-proj = 'ts'
+proj = PROJ
 
  initGit(proj) #ok
   cPostUpdate(proj) #ok
