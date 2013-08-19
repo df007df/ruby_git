@@ -153,6 +153,7 @@ def copyBranch(newBarnch, copyBarnch, ssh)
 		if !checkBranch(newBarnch, ssh)
 			cddir = "cd #{BARE_PATH};"
 			copy = ssh.exec!("sudo su git; #{cddir} git branch #{newBarnch} #{copyBarnch}")
+			p copy
 		else
 			p 'newbranch is exits: ' + newBarnch
 			exit
@@ -175,9 +176,9 @@ def addProjRemote(proj, ssh)
 	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
 
 	 if !checkRemote(barnch, ssh)
-	 	ssh.exec "sudo su git; cd #{BARE_PATH}; #{addremote}"
+	 	p ssh.exec "sudo su git; cd #{BARE_PATH}; #{addremote}"
 	 	copyBranch(barnch, COPY_BRANCH, ssh)
-	 	ssh.exec "sudo su git; cd #{BARE_PATH}; #{pushProj}"
+	 	p ssh.exec "sudo su git; cd #{BARE_PATH}; #{pushProj}"
 
 	 else
 	 	p "#{barnch} remote is exists"	
