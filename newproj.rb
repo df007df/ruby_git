@@ -292,7 +292,7 @@ def setMain(proj)
 	configs = {
 		'APP_NAME' => getAppName(proj),
 		'ROOT_DOMAIN' => getProjDomain(proj).sub('www.', ''),
-		'M_S' => '192.168.0.231',
+		'M_S' => 'localhost',
 		'M_S_P' => addMemcached(proj),
 
 		'S_T' => proj,
