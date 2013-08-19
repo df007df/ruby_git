@@ -175,12 +175,7 @@ def addProjRemote(proj, ssh)
 	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
 	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
         
-          p ssh.exec! "id; pwd;"
-   
-          
-          p ssh.exec! "cd /home/git; pwd;"
-          
-          exit
+  
           
 	 if !checkRemote(barnch, ssh)
 	 	p ssh.exec!("cd #{BARE_PATH}; #{addremote}")
