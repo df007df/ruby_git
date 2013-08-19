@@ -175,9 +175,9 @@ def addProjRemote(proj, ssh)
 	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
 
 	 if !checkRemote(barnch, ssh)
-	 	ssh.exec "cd #{BARE_PATH}; #{addremote}"
+	 	ssh.exec "sudo su git; cd #{BARE_PATH}; #{addremote}"
 	 	copyBranch(barnch, COPY_BRANCH, ssh)
-	 	ssh.exec "cd #{BARE_PATH}; #{pushProj}"
+	 	ssh.exec "sudo su git; cd #{BARE_PATH}; #{pushProj}"
 
 	 else
 	 	p "#{barnch} remote is exists"	
