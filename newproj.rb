@@ -179,6 +179,10 @@ def addProjRemote(proj, ssh)
           
           p ssh.exec "sudo su git; id; pwd;"
           
+          p ssh.exec "sudo su git; cd ~/; id; pwd;"
+          
+          exit
+          
 	 if !checkRemote(barnch, ssh)
 	 	p ssh.exec!("sudo su git; cd #{BARE_PATH}; #{addremote}")
 	 	copyBranch(barnch, COPY_BRANCH, ssh)
