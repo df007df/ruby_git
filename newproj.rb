@@ -102,7 +102,7 @@ def cPostUpdate(proj)
 	newPath = projpath + '.git/hooks/post-update';
 
 	if `echo '#{string}' > #{newPath}`
-		#`sudo chown git:#{PROJ_USER} #{newPath}`
+		`sudo chown #{PROJ_USER}:#{PROJ_USER} #{newPath}`
 		`sudo chmod 751  #{newPath}`	
 	end	
 	
