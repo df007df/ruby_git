@@ -175,11 +175,11 @@ def addProjRemote(proj, ssh)
 	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
 	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
         
-          p ssh.exec "id; pwd;"
+          p ssh.exec! "id; pwd;"
           
-          p ssh.exec "sudo su git; id; pwd;"
+          p ssh.exec! "sudo su git; id; pwd;"
           
-          p ssh.exec "sudo su git; cd ~/; id; pwd;"
+          p ssh.exec! "sudo su git; cd ~/; id; pwd;"
           
           exit
           
