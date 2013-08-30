@@ -341,6 +341,39 @@ end
 
 
 
+############## checkout config path, add&push config
+
+ def checkoutConfigBranch() 
+ 	#in config dir
+ 	Dir.chdir(CONFIG_BRANCH_PATH)
+ 	
+ 	#git fetch 
+ 	`git fetch`
+ 	
+ 	#git checkout proj/tt
+ 	barnchs = `git branch`
+	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
+		puts 'config not find  proj branch'
+	else
+		
+		`git checkout #{getBranch(proj)}`
+		 #edit config
+		 
+		 
+		 
+ 	
+ 		#git push
+		
+	end
+ 	
+ 	
+ 	
+ 
+ 	
+ 	
+ 		
+ end	
+ 	
 
 
 
