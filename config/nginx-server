@@ -39,7 +39,7 @@ server {
     location ~ \.php$ {
         fastcgi_pass   127.0.0.1:9000;
         fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
-        fastcgi_param   ENV production;
+        fastcgi_param   ENV {{env}};
         include        fastcgi_params;
     }
 }
@@ -87,6 +87,7 @@ server {
     location ~ \.php$ {
         fastcgi_pass   127.0.0.1:9000;
         fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        fastcgi_param   ENV {{env}};
         include        fastcgi_params;
     }
 }
