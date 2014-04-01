@@ -5,6 +5,11 @@ PROJ_USER = 'kawawa'
 PROJ_PASS = 'deepin'
 
 
+RELEASE_DB_USER = 'saas_kawawa'
+RELEASE_DB_PWD = 'hVxsR7VFYRKZsbNJ'
+RELEASE_DB_NAME = 'orgcache'
+
+
 PROJ_NGINX_PATH = '/etc/nginx/'
 
 
@@ -30,7 +35,7 @@ COPY_BRANCH = 'master'
 
 
 
-PROJ = 'df007df'
+PROJ = 'solr'
 
 
 

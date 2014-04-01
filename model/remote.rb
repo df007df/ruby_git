@@ -3,6 +3,73 @@ def getProjPath(proj)
 end
 
 
+
+
+def devConfig(proj, ssh)
+    path = getProjPath(proj)
+
+    mainPath = PATH + 'config/main.php'
+    configs = {
+        'APP_NAME' => Env.getAppName(proj),
+        'ROOT_DOMAIN' => Env.getProjDomain(proj).sub('www.', ''),
+
+        'WWW_DOMAIN' => Env.getProjDomain(proj),
+        'STATIC_DOMAIN' => Env.getProjDomain(proj, 'static'),
+        'FILEIO_DOMAIN' => Env.getProjDomain(proj, 'fileio'),
+
+        'M_S' => 'localhost',
+        'M_S_P' => '11211',
+
+        'S_T' => 'master',
+
+        'D_NAME' => 'localhost',
+        'D_HOST' => '127.0.0.1',
+        'D_DB' => Env.getProjDomain(proj),
+        'D_USER' => Env.getDbUserName(proj),
+        'D_PWD' => Env.getDbPwd(proj)
+    }
+
+    configs = replaceString(mainPath, configs);
+
+    addMainPath = path + 'config/development.php'
+
+    puts ssh.exec "echo #{configs} > #{addMainPath}"
+
+end 
+
+
+
+def chmodFile(proj, ssh)
+
+    uploadPath = getProjPath(proj) + 'upload/'
+    logPath = getProjPath(proj) + 'log'
+
+    ssh.exec "mkdir #{uploadPath} && chmod 777 #{uploadPath}"
+    ssh.exec "chmod 777 #{logPath}"
+
+end 
+
+def initData(proj, ssh)
+    Dir.chdir(getProjPath(proj))
+    p `pwd`
+    `ENV=production ./script/phpming.php migrate`
+end 
+
+
+def composer(proj, ssh)
+    #ln -s
+
+end 
+
+
+
+def copyFileIo(proj, ssh)
+
+end 
+
+
+
+
 def initGit(proj, ssh) 
 	path = getProjPath(proj)
 
@@ -10,12 +77,12 @@ def initGit(proj, ssh)
 	puts ssh.exec "sudo chown #{PROJ_USER}:#{PROJ_USER} #{path}"
 
 
-    puts ssh.exec "cd #{path} & git init #{path} & git remote rm origin & git branch -D master"
+    puts ssh.exec "cd #{path} && git init #{path} && git remote rm origin && git branch -D master"
 
 
-	puts ssh.exec "cd #{path} & git config -f #{path}.git/config receive.denyCurrentBranch ignore"
+	puts ssh.exec "cd #{path} && git config -f #{path}.git/config receive.denyCurrentBranch ignore"
     
-    config = ssh.exec! "cd #{path} & git config --get -f #{path}.git/config receive.denyCurrentBranch"
+    config = ssh.exec! "cd #{path} && git config --get -f #{path}.git/config receive.denyCurrentBranch"
    
      if /ignore/iu =~ config
      	puts 'git init ok!'
@@ -29,8 +96,6 @@ end
 
 
 
-
-
 def cPostUpdate(proj, ssh) 
 
     path = getProjPath(proj)
@@ -39,7 +104,7 @@ def cPostUpdate(proj, ssh)
 
     hookPath = path + '.git/hooks/post-update';
 
-    puts ssh.exec "echo '#{string}' > #{hookPath} & sudo chown #{PROJ_USER}:#{PROJ_USER} #{hookPath} & sudo chmod 751  #{hookPath}"
+    puts ssh.exec "echo '#{string}' > #{hookPath} && sudo chown #{PROJ_USER}:#{PROJ_USER} #{hookPath} && sudo chmod 751  #{hookPath}"
 end 
 
 
@@ -51,12 +116,12 @@ def buildNginx(proj, ssh)
     projPublicPath = getProjPath(proj) + 'public'
 
     str = {
-        'server_name' => getProjDomain(proj),
+        'server_name' => Env.getProjDomain(proj),
         'server_port' => HOST_PORT,
         'root' => projPublicPath,
         'log_path' =>  '/var/log/nginx/',
-        'static_name' => getProjDomain(proj, :static),
-        'fileio_name' => getProjDomain(proj, :fileio),
+        'static_name' => Env.getProjDomain(proj, :static),
+        'fileio_name' => Env.getProjDomain(proj, :fileio),
         'env' => 'development'
     }
 
@@ -67,34 +132,31 @@ def buildNginx(proj, ssh)
     newPath = nginxPath + 'sites-available/' + str['server_name']
     enaPath = nginxPath + 'sites-enabled/' + str['server_name']
 
-    puts ssh.exec "sudo echo '#{string}' > #{tmpfile} & sudo chown root:root #{tmpfile} & sudo chmod 644  #{tmpfile} & sudo mv #{tmpfile} #{newPath} & sudo ln -s #{newPath}  #{enaPath}"
+    puts ssh.exec "sudo echo '#{string}' > #{tmpfile} && sudo chown root:root #{tmpfile} && sudo chmod 644  #{tmpfile} && sudo mv #{tmpfile} #{newPath} && sudo ln -s #{newPath}  #{enaPath}"
 
 
 end 
 
 
-
-def getDbUserName(proj)
-    'saas_' + proj
-end 
-
-def getDbPwd(proj)
-    '123456'
-end 
 
 def addDbUser(proj, ssh)
-    dbconfig = PATH + 'config/user.sql'
-    str = {
-        'dbuser' => getDbUserName(proj),
-        'password' => getDbPwd(proj),
-        'host' =>  'localhost',
-        'dbname' => getProjDomainDbName(proj),
-    }
 
-    sql = replaceString(dbconfig, str);
+    if Env.createUser?
+        dbconfig = PATH + 'config/user.sql'
+        str = {
+            'dbuser' => getDbUserName(proj),
+            'password' => getDbPwd(proj),
+            'host' =>  'localhost',
+            'dbname' => Env.getProjDomainDbName(proj),
+        }
 
-    tmpSql = "/tmp/#{proj}_sql"
+        sql = replaceString(dbconfig, str);
 
-    puts ssh.exec "echo '#{sql}' > #{tmpSql} & mysql --user=#{DB_USER} --password=#{DB_PWD} < #{tmpSql}"
+        tmpSql = "/tmp/#{proj}_sql"
+
+        puts ssh.exec "echo '#{sql}' > #{tmpSql} && mysql --user=#{DB_USER} --password=#{DB_PWD} < #{tmpSql}"
+        
+    end    
+    
 
 end 

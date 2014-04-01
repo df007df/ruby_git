@@ -1,6 +1,11 @@
 <?php
-Main::\$APPLICATION_NAME = '{{APP_NAME}}';
+
+//Main::\$APPLICATION_NAME = '{{APP_NAME}}';
+
+Main::\$WWW_DOMAIN = '{{WWW_DOMAIN}}';
 Main::\$ROOT_DOMAIN = '{{ROOT_DOMAIN}}';
+Main::\$STATIC_DOMAIN = '{{STATIC_DOMAIN}}';
+Main::\$FILEIO_DOMAIN = '{{FILEIO_DOMAIN}}';
 
 Main::\$MEMCACHE_SERVERS = array(
         array(
@@ -11,9 +16,10 @@ Main::\$MEMCACHE_SERVERS = array(
     );
 
 Main::\$STORAGE_SERVERS = array(
-        '192.168.0.248' => '{{S_T}}'
-    );
+  '192.168.0.251' => '{{S_T}}'
+);
 
+Main::$REDIS_SERVER   = '192.168.0.251:6379';
 
 Main::\$DATABASE_SERVERS = array(
       array(

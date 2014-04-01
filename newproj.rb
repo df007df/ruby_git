@@ -20,46 +20,110 @@ PATH = Pathname.new(File.dirname(__FILE__)).realpath.to_s + '/'
 #p Dir.getwd
 
 
-def getProjDomain (proj, pex = nil)
-	if pex
-		"#{pex}.test.#{proj}.aysaas.com"
-	else
-		"www.test.#{proj}.aysaas.com"	
-	end	
+
+class Env
+
+	@@type = 'release'  #release || proj
+
+	def self.getAppName(proj)
+		if @@type == 'release'
+			'AYSaaS-release'
+		else
+			'AYSaaS-proj'	
+		end	
 		
-end	
-
-
-def getProjDomainDbName (proj, pex = nil)
-	if pex
-		"#{pex}_test_#{proj}_aysaas_com"
-	else
-		"www_test_#{proj}_aysaas_com"	
-	end	
-		
-end	
-
-
-
-def getBranch(proj)
-	'proj/' + proj
-end	
-
-
-
-def getOldProj(proj)
-
-	if proj == 'safirst'
-		PROJ_PATH + 'oa.a-y.com.cn/'
-	else	
-		PROJ_PATH + getProjDomain(proj) + '/'
 	end	
 
+
+	def self.getBranch(proj)
+		@@type + '/' + proj
+	end	
+
+
+
+	def self.getOldProj(proj)
+
+		if proj == 'safirst'
+			PROJ_PATH + 'oa.a-y.com.cn/'
+		else	
+			PROJ_PATH + self.getProjDomain(proj) + '/'
+		end	
+
+	end	
+
+	def self._getDomainType()
+		return @@type == 'release' ? 'release' : 'test'
+	end	
+
+	def self.release?()
+		@@type == 'release'
+	end	
+
+	def self.proj?()
+		@@type == 'proj'
+	end	
+
+
+	def self.createUser?
+		!self.release?
+	end	
+
+
+	def self.getCopyBranch
+		COPY_BRANCH
+	end	
+
+
+	def self.getProjDomain (proj, pex = nil)
+
+		type = self._getDomainType()
+		if pex
+			"#{pex}.#{type}.#{proj}.aysaas.com"
+		else
+			"www.#{type}.#{proj}.aysaas.com"	
+		end	
+			
+	end	
+
+	def self.getProjDomainDbName (proj)
+
+		type = self._getDomainType()
+
+		return type == 'release' ? RELEASE_DB_NAME : "www_#{proj}_aysaas_com"
+			
+	end	
+
+
+
+	def self.getDbUserName(proj)
+
+		return self._getDomainType == 'release' ? RELEASE_DB_USER : 'saas_' + proj
+
+	end 
+
+	def self.getDbPwd(proj)
+		return self._getDomainType == 'release' ? RELEASE_DB_PWD : '123456'
+	end 
+
+
+
+	def self.process(proj, ssh)
+
+
+		devConfig(proj, ssh)
+  		chmodFile(proj, ssh)
+
+
+
+		#initData(proj)
+
+		#composer(proj, ssh)
+		#copyFileIo(proj, ssh)
+
+	end	
+
+
 end	
-
-
-
-
 
 
 
@@ -135,44 +199,8 @@ end
 
 
 
-	
-
-
-
-
-def getAppName(proj)
-	'AYSaaS-' + proj
-end	
-
-
-
-
 
 #######  end ############
-
-def chmodFile(proj)
-	uploadPath = getProjPath(proj) + 'upload/'
-	logPath = getProjPath(proj) + 'log'
-	`sudo mkdir #{uploadPath}`
-	`sudo chmod 666 #{uploadPath}`
-	`sudo chmod 666 #{logPath}`
-end	
-
-
-def composer()
-	#ln -s
-
-end	
-
-def initData(proj)
-	Dir.chdir(getProjPath(proj))
-	p `pwd`
-	`ENV=production ./script/phpming.php migrate`
-end	
-
-def copyFileIo
-
-end	
 
 
 
@@ -216,59 +244,47 @@ end
 
 proj = PROJ
 
-=begin
+
 
 loginSSH(BARE_HOST, BARE_USER, BARE_PASS) {|ssh| 
-  	addProjRemote(proj, ssh);
+  	addProjRemote(proj, ssh)
 }
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
-  	initGit(proj, ssh);
+  	initGit(proj, ssh)
 }
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
-  	cPostUpdate(proj, ssh);
+  	cPostUpdate(proj, ssh)
 }
 
-
-
-
-loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
-  	buildNginx(proj, ssh);
-}
 
 
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
-  	addDbUser(proj, ssh);
+  	buildNginx(proj, ssh)
 }
 
-=end
 
 
-Local.setMain(proj);
+loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
+  	addDbUser(proj, ssh)
+}
+
+Local.pushBarnch(proj)
+
+
+
+
+loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
+  	
+	Env.process(proj, ssh)
+
+}
+
 
 
 
 =begin
- initGit(proj) #ok
-  cPostUpdate(proj) #ok
-
-  loginSSH(BARE_HOST, BARE_USER, BARE_PASS){|ssh| 
-  	addProjRemote(proj, ssh);
- }
-
-
-
-addDbUser(proj)  #ok
-
-
-
-startMemcached(proj); #ok
-
-
-setMain(proj)
-chmodFile(proj)
-#initData(proj)
 
 =end
