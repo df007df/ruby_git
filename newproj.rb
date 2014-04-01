@@ -253,7 +253,6 @@ end
 
 proj = PROJ
 
-=begin
 	
 loginSSH(BARE_HOST, BARE_USER, BARE_PASS) {|ssh| 
   	addProjRemote(proj, ssh)
@@ -300,7 +299,6 @@ loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh|
 Local.pushBarnch(proj)
 Env.pp 20
 
-=end
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	

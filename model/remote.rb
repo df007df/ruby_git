@@ -138,6 +138,7 @@ def buildNginx(proj, ssh)
 
     puts ssh.exec "sudo echo '#{string}' > #{tmpfile} && sudo chown root:root #{tmpfile} && sudo chmod 644  #{tmpfile} && sudo mv #{tmpfile} #{newPath} && sudo ln -s #{newPath}  #{enaPath}"
 
+    puts ssh.exec "sudo service nginx restart"
 
 end 
 
