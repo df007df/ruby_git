@@ -1,5 +1,5 @@
 def getProjPath(proj) 
-    PROJ_PATH + getProjDomain(proj) + '/'
+    PROJ_PATH + Env.getProjDomain(proj) + '/'
 end
 
 
@@ -17,6 +17,8 @@ def devConfig(proj, ssh)
         'STATIC_DOMAIN' => Env.getProjDomain(proj, 'static'),
         'FILEIO_DOMAIN' => Env.getProjDomain(proj, 'fileio'),
 
+        'PORT' => HOST_PORT,
+
         'M_S' => 'localhost',
         'M_S_P' => '11211',
 
@@ -24,16 +26,17 @@ def devConfig(proj, ssh)
 
         'D_NAME' => 'localhost',
         'D_HOST' => '127.0.0.1',
-        'D_DB' => Env.getProjDomain(proj),
+        'D_DB' => Env.getProjDomainDbName(proj),
         'D_USER' => Env.getDbUserName(proj),
         'D_PWD' => Env.getDbPwd(proj)
     }
 
     configs = replaceString(mainPath, configs);
 
+
     addMainPath = path + 'config/development.php'
 
-    puts ssh.exec "echo #{configs} > #{addMainPath}"
+    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 
 end 
 
@@ -44,8 +47,17 @@ def chmodFile(proj, ssh)
     uploadPath = getProjPath(proj) + 'upload/'
     logPath = getProjPath(proj) + 'log'
 
-    ssh.exec "mkdir #{uploadPath} && chmod 777 #{uploadPath}"
+    ssh.exec "mkdir -p #{uploadPath} && chmod 777 #{uploadPath}"
     ssh.exec "chmod 777 #{logPath}"
+
+end 
+
+
+def composer(proj, ssh)
+    #ln -s
+    path = getProjPath(proj)
+    ssh.exec "cp -R #{COMPOSER_PATH} #{path}"
+
 
 end 
 
@@ -56,13 +68,6 @@ def initData(proj, ssh)
 end 
 
 
-def composer(proj, ssh)
-    #ln -s
-
-end 
-
-
-
 def copyFileIo(proj, ssh)
 
 end 
@@ -71,25 +76,23 @@ end
 
 
 def initGit(proj, ssh) 
-	path = getProjPath(proj)
+	path = getProjPath(proj)   
 
-    puts ssh.exec "sudo mkdir #{path}"
-	puts ssh.exec "sudo chown #{PROJ_USER}:#{PROJ_USER} #{path}"
+    newbarch = Env.getBranch(proj)
 
+    ssh.exec "sudo mkdir -p #{path}"
+	ssh.exec "sudo chown #{PROJ_USER}:#{PROJ_USER} #{path}"
 
-    puts ssh.exec "cd #{path} && git init #{path} && git remote rm origin && git branch -D master"
-
-
-	puts ssh.exec "cd #{path} && git config -f #{path}.git/config receive.denyCurrentBranch ignore"
+    config = ssh.exec! "git config --get -f #{path}.git/config receive.denyCurrentBranch"
     
-    config = ssh.exec! "cd #{path} && git config --get -f #{path}.git/config receive.denyCurrentBranch"
-   
-     if /ignore/iu =~ config
-     	puts 'git init ok!'
-     else
-     	puts 'git init error config!'
-     end
+    if /ignore/iu =~ config
+    	puts 'git init ok!'
+    else
+        ssh.exec "cd #{path}; git init #{path} && git checkout -b  #{newbarch} && git remote rm origin || git branch -D master"
+        ssh.exec "cd #{path}; git config -f #{path}.git/config receive.denyCurrentBranch ignore"
 
+    	puts 'git init error config!'
+    end
 
 end
 
@@ -100,11 +103,12 @@ def cPostUpdate(proj, ssh)
 
     path = getProjPath(proj)
     exampath = PATH + 'config/post-update'
-    string = replaceString(exampath, proj, '{{proj}}')
 
+    string = replaceString(exampath, Env.getBranch(proj), '{{proj}}')
+    
     hookPath = path + '.git/hooks/post-update';
 
-    puts ssh.exec "echo '#{string}' > #{hookPath} && sudo chown #{PROJ_USER}:#{PROJ_USER} #{hookPath} && sudo chmod 751  #{hookPath}"
+    ssh.exec "echo '#{string}' > #{hookPath} && sudo chown #{PROJ_USER}:#{PROJ_USER} #{hookPath} && sudo chmod 751  #{hookPath}"
 end 
 
 
@@ -155,7 +159,7 @@ def addDbUser(proj, ssh)
         tmpSql = "/tmp/#{proj}_sql"
 
         puts ssh.exec "echo '#{sql}' > #{tmpSql} && mysql --user=#{DB_USER} --password=#{DB_PWD} < #{tmpSql}"
-        
+
     end    
     
 

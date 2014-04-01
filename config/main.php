@@ -1,11 +1,11 @@
 <?php
-
+require __DIR__ . '/main.php';
 //Main::\$APPLICATION_NAME = '{{APP_NAME}}';
 
-Main::\$WWW_DOMAIN = '{{WWW_DOMAIN}}';
-Main::\$ROOT_DOMAIN = '{{ROOT_DOMAIN}}';
-Main::\$STATIC_DOMAIN = '{{STATIC_DOMAIN}}';
-Main::\$FILEIO_DOMAIN = '{{FILEIO_DOMAIN}}';
+Main::\$WWW_DOMAIN = '{{WWW_DOMAIN}}:{{PORT}}';
+Main::\$ROOT_DOMAIN = '{{ROOT_DOMAIN}}:{{PORT}}';
+Main::\$STATIC_DOMAIN = '{{STATIC_DOMAIN}}:{{PORT}}';
+Main::\$FILEIO_DOMAIN = '{{FILEIO_DOMAIN}}:{{PORT}}';
 
 Main::\$MEMCACHE_SERVERS = array(
         array(
@@ -19,7 +19,7 @@ Main::\$STORAGE_SERVERS = array(
   '192.168.0.251' => '{{S_T}}'
 );
 
-Main::$REDIS_SERVER   = '192.168.0.251:6379';
+Main::\$REDIS_SERVER   = '192.168.0.251:6379';
 
 Main::\$DATABASE_SERVERS = array(
       array(

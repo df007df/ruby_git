@@ -4,6 +4,10 @@ PROJ_PATH = '/var/www/'
 PROJ_USER = 'kawawa'
 PROJ_PASS = 'deepin'
 
+HOST_PORT = 7777
+
+COMPOSER_PATH = '/var/www/orgcache/vendor/';
+
 
 RELEASE_DB_USER = 'saas_kawawa'
 RELEASE_DB_PWD = 'hVxsR7VFYRKZsbNJ'
@@ -14,7 +18,6 @@ PROJ_NGINX_PATH = '/etc/nginx/'
 
 
 
-HOST_PORT = 7777
 
 DB_USER = 'root'
 DB_PWD  = 'saas'
@@ -27,17 +30,10 @@ BARE_PASS = 'wAtt1WFq7ve4AwH'
 
 
 
-
-
-
-
 COPY_BRANCH = 'master'
+
+WORK_PATH = '/home/df/ruby/ruby_git/saas/'
 
 
 
 PROJ = 'solr'
-
-
-
-
-WORK_PATH = '/home/df/ruby/ruby_git/saas/'

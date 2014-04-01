@@ -113,13 +113,22 @@ class Env
 		devConfig(proj, ssh)
   		chmodFile(proj, ssh)
 
+  		composer(proj, ssh)
 
 
 		#initData(proj)
 
-		#composer(proj, ssh)
 		#copyFileIo(proj, ssh)
 
+	end	
+
+
+
+	def self.pp(n)
+
+		print "|" + '='*n + "| #{n}% \r"
+		$stdout.flush
+		sleep 1
 	end	
 
 
@@ -244,47 +253,60 @@ end
 
 proj = PROJ
 
-
-
+=begin
+	
 loginSSH(BARE_HOST, BARE_USER, BARE_PASS) {|ssh| 
   	addProjRemote(proj, ssh)
+
+  	Env.pp 10
 }
+
+
+
+
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	initGit(proj, ssh)
+
+  	Env.pp 10
 }
+
+
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	cPostUpdate(proj, ssh)
+
+  	Env.pp 10
 }
+
 
 
 
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	buildNginx(proj, ssh)
+  	Env.pp 10
 }
 
 
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	addDbUser(proj, ssh)
+  	Env.pp 10
 }
 
+
+
 Local.pushBarnch(proj)
+Env.pp 20
 
-
-
+=end
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	
 	Env.process(proj, ssh)
-
+	Env.pp 20
 }
 
 
 
-
-=begin
-
-=end

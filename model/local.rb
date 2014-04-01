@@ -6,6 +6,7 @@ class Local
 		#addMainPath = getProjPath(proj) + 'config/config_main.php'
 		newbarnch = Env.getBranch(proj)	
 
+		`cd #{WORK_PATH}; git fetch origin #{newbarnch}`
 
 		if Env.release?
 
