@@ -80,25 +80,16 @@ def initGit(proj, ssh)
 
     newbarch = Env.getBranch(proj)
 
-    ssh.exec "sudo mkdir -p #{path}"
-	ssh.exec "sudo chown #{PROJ_USER}:#{PROJ_USER} #{path}"
-
+    ssh.exec! "sudo mkdir -p #{path} && sudo chown #{PROJ_USER}:#{PROJ_USER} #{path}"
+    ssh.exec! "git init #{path} && git --git-dir=#{path}/.git checkout -b #{newbarch}"
+    ssh.exec! "git config -f #{path}.git/config receive.denyCurrentBranch ignore"
     config = ssh.exec! "git config --get -f #{path}.git/config receive.denyCurrentBranch"
-    
     if /ignore/iu =~ config
-    	puts 'git init ok!'
+        puts 'git init ok!'
     else
-        ssh.exec "cd #{path}; git init #{path} && git checkout -b  #{newbarch} && git remote rm origin || git branch -D master"
-        ssh.exec "cd #{path}; git config -f #{path}.git/config receive.denyCurrentBranch ignore"
-
-        config = ssh.exec! "git config --get -f #{path}.git/config receive.denyCurrentBranch"
-        if /ignore/iu =~ config
-            puts 'git init ok!'
-        else
-            Env.exit 'git init error config!'
-        end
-
+        Env.exit 'git init error config!'
     end
+
 
 end
 
