@@ -91,7 +91,12 @@ def initGit(proj, ssh)
         ssh.exec "cd #{path}; git init #{path} && git checkout -b  #{newbarch} && git remote rm origin || git branch -D master"
         ssh.exec "cd #{path}; git config -f #{path}.git/config receive.denyCurrentBranch ignore"
 
-    	Env.exit 'git init error config!'
+        if /ignore/iu =~ config
+            puts 'git init ok!'
+        else
+            Env.exit 'git init error config!'
+        end
+
     end
 
 end
