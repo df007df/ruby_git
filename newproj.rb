@@ -259,9 +259,6 @@ end
 
 proj = PROJ
 
-
-Env.exit "#{proj} remote is exists"	
-
 	
 loginSSH(BARE_HOST, BARE_USER, BARE_PASS) {|ssh| 
   	addProjRemote(proj, ssh)
