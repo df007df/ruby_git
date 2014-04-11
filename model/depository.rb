@@ -32,7 +32,7 @@ def addProjRemote(proj, ssh)
 	 	#copyBranch(barnch, COPY_BRANCH, ssh)
 	 	#puts ssh.exec "cd #{BARE_PATH}; #{pushProj}"
 	 else
-	 	puts "#{barnch} remote is exists"	
+	 	Env.exit "#{barnch} remote is exists"	
 	 end	
 
 end	

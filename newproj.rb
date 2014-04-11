@@ -132,6 +132,12 @@ class Env
 	end	
 
 
+	def self.exit(info)
+		puts info
+		exit! 1
+	end	
+
+
 end	
 
 
@@ -252,6 +258,9 @@ end
 
 
 proj = PROJ
+
+
+Env.exit "#{proj} remote is exists"	
 
 	
 loginSSH(BARE_HOST, BARE_USER, BARE_PASS) {|ssh| 

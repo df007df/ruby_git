@@ -38,13 +38,13 @@ class Local
 			if !self.checkBranch(newBarnch)
 				puts `cd #{WORK_PATH}; git fetch origin #{copyBarnch} && git branch #{newBarnch} #{copyBarnch}`
 			else
-				puts 'newbranch is exits: ' + newBarnch
-				exit
+				Env.exit 'newbranch is exits: ' + newBarnch
+				
 			end		
 			
 		else
-			p 'no copy branch: ' + copyBarnch
-			exit
+			Env.exit 'no copy branch: ' + copyBarnch
+		
 		end	
 
 	end	
