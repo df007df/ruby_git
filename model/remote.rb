@@ -81,7 +81,7 @@ def initGit(proj, ssh)
     newbarch = Env.getBranch(proj)
 
     ssh.exec! "sudo mkdir -p #{path} && sudo chown #{PROJ_USER}:#{PROJ_USER} #{path}"
-    ssh.exec! "git init #{path} && git --git-dir=#{path}/.git checkout -b #{newbarch}"
+    ssh.exec! "git init #{path} && git --git-dir=#{path}/.git checkout -b master"
     ssh.exec! "git config -f #{path}.git/config receive.denyCurrentBranch ignore"
     config = ssh.exec! "git config --get -f #{path}.git/config receive.denyCurrentBranch"
     if /ignore/iu =~ config
@@ -133,9 +133,9 @@ def buildNginx(proj, ssh)
     newPath = nginxPath + 'sites-available/' + str['server_name']
     enaPath = nginxPath + 'sites-enabled/' + str['server_name']
 
-    puts ssh.exec "sudo echo '#{string}' > #{tmpfile} && sudo chown root:root #{tmpfile} && sudo chmod 644  #{tmpfile} && sudo mv #{tmpfile} #{newPath} && sudo ln -s #{newPath}  #{enaPath}"
+    ssh.exec "sudo echo '#{string}' > #{tmpfile} && sudo chown root:root #{tmpfile} && sudo chmod 644  #{tmpfile} && sudo mv #{tmpfile} #{newPath} && sudo ln -s #{newPath}  #{enaPath}"
 
-    puts ssh.exec "sudo service nginx restart"
+    ssh.exec "sudo service nginx restart"
 
 end 
 

@@ -10,7 +10,7 @@ class Local
 
 		if Env.release?
 
-			puts `cd #{WORK_PATH}; git checkout #{newbarnch} -f && git pull origin #{newbarnch}`
+			puts `cd #{WORK_PATH}; git checkout #{newbarnch} -f`
 
 		end 
 
@@ -21,8 +21,9 @@ class Local
 
 		end	
 
-		
-		puts `cd #{WORK_PATH}; git push origin #{newbarnch}:#{newbarnch}`
+		pushCommand = "git --git-dir=#{WORK_PATH}.git push origin #{newbarnch}:#{newbarnch}"
+		puts pushCommand
+		puts `#{pushCommand}`
 	
 =begin
 

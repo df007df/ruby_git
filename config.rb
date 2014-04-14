@@ -1,12 +1,12 @@
-
-PROJ_HOST = '192.168.0.251'  #248
+PROJ_HOST = '192.168.0.223'  #248
 PROJ_PATH = '/var/www/'
 PROJ_USER = 'kawawa'
 PROJ_PASS = 'deepin'
+ 
+HOST_PORT = 6666
 
-HOST_PORT = 7777
 
-COMPOSER_PATH = '/var/www/orgcache/vendor/';
+COMPOSER_PATH = '/home/kawawa/vendor/';
 
 
 RELEASE_DB_USER = 'saas_kawawa'
