@@ -23,7 +23,7 @@ def addProjRemote(proj, ssh)
 	projpath = getProjPath(proj)
 	barnch = Env.getBranch(proj)
 	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
-	pushProj = "git push #{barnch} #{barnch}:#{barnch}"
+	pushProj = "sudo su git -c 'git push #{barnch} #{barnch}:#{barnch}'"
         
   
           
