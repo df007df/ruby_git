@@ -4,141 +4,21 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'pathname'
 require 'net/ssh'
 require 'multi_json'
-require 'config'
+require 'slop'
+require 'json'
+
 
 require 'model/depository'
 require 'model/local'
 require 'model/remote'
+require 'model/setting'
+require 'model/env'
+
 
 
 PATH = Pathname.new(File.dirname(__FILE__)).realpath.to_s + '/'
 
-#p Dir.getwd
 
-#Dir.chdir('/home')
-#p `pwd`
-#p Dir.getwd
-
-
-
-class Env
-
-	@@type = 'release'  #release || proj
-
-	def self.getAppName(proj)
-		if @@type == 'release'
-			'AYSaaS-release'
-		else
-			'AYSaaS-proj'	
-		end	
-		
-	end	
-
-
-	def self.getBranch(proj)
-		@@type + '/' + proj
-	end	
-
-
-
-	def self.getOldProj(proj)
-
-		if proj == 'safirst'
-			PROJ_PATH + 'oa.a-y.com.cn/'
-		else	
-			PROJ_PATH + self.getProjDomain(proj) + '/'
-		end	
-
-	end	
-
-	def self._getDomainType()
-		return @@type == 'release' ? 'release' : 'test'
-	end	
-
-	def self.release?()
-		@@type == 'release'
-	end	
-
-	def self.proj?()
-		@@type == 'proj'
-	end	
-
-
-	def self.createUser?
-		!self.release?
-	end	
-
-
-	def self.getCopyBranch
-		COPY_BRANCH
-	end	
-
-
-	def self.getProjDomain (proj, pex = nil)
-
-		type = self._getDomainType()
-		if pex
-			"#{pex}.#{type}.#{proj}.aysaas.com"
-		else
-			"www.#{type}.#{proj}.aysaas.com"	
-		end	
-			
-	end	
-
-	def self.getProjDomainDbName (proj)
-
-		type = self._getDomainType()
-
-		return type == 'release' ? RELEASE_DB_NAME : "www_#{proj}_aysaas_com"
-			
-	end	
-
-
-
-	def self.getDbUserName(proj)
-
-		return self._getDomainType == 'release' ? RELEASE_DB_USER : 'saas_' + proj
-
-	end 
-
-	def self.getDbPwd(proj)
-		return self._getDomainType == 'release' ? RELEASE_DB_PWD : '123456'
-	end 
-
-
-
-	def self.process(proj, ssh)
-
-
-		devConfig(proj, ssh)
-  		chmodFile(proj, ssh)
-
-  		composer(proj, ssh)
-
-
-		#initData(proj)
-
-		#copyFileIo(proj, ssh)
-
-	end	
-
-
-
-	def self.pp(n)
-
-		print "|" + '='*n + "| #{n}% \r"
-		$stdout.flush
-		sleep 1
-	end	
-
-
-	def self.exit(info)
-		puts info
-		exit! 1
-	end	
-
-
-end	
 
 
 
@@ -159,19 +39,11 @@ end
 
 
 
-
-
-
-
-
-############# bare-git host
-
 def loginSSH(host, user, password)
 	Net::SSH.start( host, user, :password => password ) do |ssh|
 	   yield ssh	
 	end
 end	
-
 
 
 def copyBranch(newBarnch, copyBarnch, ssh) 
@@ -196,14 +68,6 @@ end
 
 
 
-
-
-
-
-################  bulidWEB  ##################
-
-
-
 def startMemcached(proj)
 	path = PATH + 'tools/memcache/start.rb'
 	puts `ruby #{path}`
@@ -211,23 +75,10 @@ end
 
 
 
-
-
-
-
-#######  end ############
-
-
-
-
-
-############## checkout config path, add&push config
-
  def checkoutConfigBranch() 
  	#in config dir
  	Dir.chdir(CONFIG_BRANCH_PATH)
- 	
- 	#git fetch 
+
  	`git fetch`
  	
  	#git checkout proj/tt
@@ -235,35 +86,42 @@ end
 	if barnchs == nil || barnchs.split(/\n/).select{|line|  line.index(barnch)}.empty?
 		puts 'config not find  proj branch'
 	else
-		
-		`git checkout #{getBranch(proj)}`
-		 #edit config
-		 
-		 
-		 
- 	
- 		#git push
-		
+	
+		`git checkout #{getBranch(proj)}`		
 	end
- 	
- 	
- 	
- 
- 	
- 	
- 		
+	
  end	
  	
 
 
 
-proj = PROJ
 
 
+opts = Slop.parse do
+  on '-v', 'Print the version' do
+    puts "Version 1.0"
+  end
+  on 'c=', 'config json'
+end
+
+if !opts[:c] || opts[:c].empty?
+	Env.exit 'config error'
+end
+
+Setting.load opts[:c]
 
 
+Env.type = Setting.get 'type'
+proj = Setting.get('branch').split('/')
+
+if proj.size != 2
+	Env.exit 'branch error'
+end	
+
+require 'config'
 
 
+proj = proj[1]
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	initGit(proj, ssh)

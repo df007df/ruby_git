@@ -11,7 +11,7 @@ def devConfig(proj, ssh)
     mainPath = PATH + 'config/main.php'
     configs = {
         'APP_NAME' => Env.getAppName(proj),
-        'ROOT_DOMAIN' => Env.getProjDomain(proj).sub('www.', ''),
+        'ROOT_DOMAIN' => Env.getProjDomain(proj),
 
         'WWW_DOMAIN' => Env.getProjDomain(proj),
         'STATIC_DOMAIN' => Env.getProjDomain(proj, 'static'),
@@ -22,7 +22,9 @@ def devConfig(proj, ssh)
         'M_S' => 'localhost',
         'M_S_P' => '11211',
 
-        'S_T' => 'master',
+        'S_T' => 'release',
+
+        'REDIS_SERVER' => '192.168.0.223:6379',
 
         'D_NAME' => 'localhost',
         'D_HOST' => '127.0.0.1',
@@ -35,10 +37,33 @@ def devConfig(proj, ssh)
 
 
     addMainPath = path + 'config/development.php'
-
     ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 
 end 
+
+
+def devConfig_app()
+
+
+end
+
+
+def devConfig_assets()
+
+end  
+
+
+def devConfig_database()
+
+end  
+
+
+def devConfig_queue()
+
+end  
+
+
+
 
 
 
