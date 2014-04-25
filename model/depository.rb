@@ -28,11 +28,10 @@ def addProjRemote(proj, ssh)
           
 	 if !checkRemote(barnch, ssh)
 	 	ssh.exec "cd #{BARE_PATH}; #{addremote}"
-	 	#copyBranch(barnch, COPY_BRANCH, ssh)
+	
+	 	moveHeads(Setting.get('copybranch'), barnch, ssh);
 
-	 	moveHeads(Setting.get('branch'), barnch, ssh);
-
-	 	puts ssh.exec "cd #{BARE_PATH}; #{pushProj}"
+	 	ssh.exec "cd #{BARE_PATH}; #{pushProj}"
 	 else
 	 	Env.exit "#{barnch} remote is exists"	
 	 end	
@@ -45,7 +44,7 @@ def moveHeads(proj, newproj, ssh)
 
 	projH = "#{BARE_PATH}#{headsPath}#{proj}"
 	newprojH = "#{BARE_PATH}#{headsPath}#{newproj}"
-	puts ssh.exec "sudo su git -c 'cp #{projH} #{newprojH}'"
+	ssh.exec "sudo su git -c 'cp #{projH} #{newprojH}'"
 end
 
 

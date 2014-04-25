@@ -9,7 +9,7 @@ return array(
          array(
             'group' => 0, // DATABASE GROUP 0
             'rules' => array(
-            '/.+\s`.+`/ix',        // All system tables
+            '/.+\s\`.+\`/ix',        // All system tables
             ),
             'master' => array(
                 'name' => '{{D_NAME}}',

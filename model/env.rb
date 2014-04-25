@@ -11,12 +11,7 @@ class Env
 	end	
 
 	def self.getAppName(proj)
-		if @@type == 'release'
-			'AYSaaS-release'
-		else
-			'AYSaaS-proj'	
-		end	
-		
+		'AYSaaS-' + proj
 	end	
 
 
@@ -50,7 +45,7 @@ class Env
 
 
 	def self.createUser?
-		!self.release?
+		(Setting.get('db_createuser') == '1')
 	end	
 
 
@@ -66,17 +61,24 @@ class Env
 		if pex
 			domain = "#{pex}.#{type}.#{proj}.aysaas.com"
 		else
-			domain = "www.#{type}.#{proj}.aysaas.com"	
+			domain = "#{type}.#{proj}.aysaas.com"	
 		end	
-
-		HOST_PORT ? domain + ":#{HOST_PORT}" : domain
 	end	
 
-	def self.getProjDomainDbName (proj)
+	def self.getProjDomainPort (proj, pex = nil)
 
+		domain = self.getProjDomain(proj, pex)		
+		HOST_PORT ? domain + ":#{HOST_PORT}" : domain
+	end
+
+	def self.getProjDomainDbName (proj)
 		type = self._getDomainType()
 
-		return type == 'release' ? RELEASE_DB_NAME : "www_#{proj}_aysaas_com"
+		if self.createUser?
+			"#{type}_#{proj}"
+		else	
+			RELEASE_DB_NAME
+		end	
 			
 	end	
 
@@ -84,12 +86,24 @@ class Env
 
 	def self.getDbUserName(proj)
 
-		return self._getDomainType == 'release' ? RELEASE_DB_USER : 'saas_' + proj
+		type = self._getDomainType()
+		
+		if self.createUser?
+			"saas_#{proj}"
+		else	
+			RELEASE_DB_USER
+		end	
 
 	end 
 
 	def self.getDbPwd(proj)
-		return self._getDomainType == 'release' ? RELEASE_DB_PWD : '123456'
+
+		if self.createUser?
+			'123456'
+		else	
+			RELEASE_DB_PWD
+		end	
+
 	end 
 
 
@@ -97,13 +111,16 @@ class Env
 	def self.process(proj, ssh)
 
 
-		devConfig(proj, ssh)
+		#devConfig(proj, ssh)
+		devNewConfig(proj, ssh)
+
   		chmodFile(proj, ssh)
 
   		composer(proj, ssh)
 
+		migrate(proj, ssh)
 
-		#initData(proj)
+		initData(proj, ssh);
 
 		#copyFileIo(proj, ssh)
 

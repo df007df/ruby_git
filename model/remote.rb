@@ -1,5 +1,5 @@
 def getProjPath(proj) 
-    PROJ_PATH + Env.getProjDomain(proj) + '/'
+    PROJ_PATH + Env.getProjDomain(proj, 'www') + '/'
 end
 
 
@@ -11,11 +11,11 @@ def devConfig(proj, ssh)
     mainPath = PATH + 'config/main.php'
     configs = {
         'APP_NAME' => Env.getAppName(proj),
-        'ROOT_DOMAIN' => Env.getProjDomain(proj),
+        'ROOT_DOMAIN' => Env.getProjDomainPort(proj),
 
-        'WWW_DOMAIN' => Env.getProjDomain(proj),
-        'STATIC_DOMAIN' => Env.getProjDomain(proj, 'static'),
-        'FILEIO_DOMAIN' => Env.getProjDomain(proj, 'fileio'),
+        'WWW_DOMAIN' => Env.getProjDomainPort(proj, 'www'),
+        'STATIC_DOMAIN' => Env.getProjDomainPort(proj, 'static'),
+        'FILEIO_DOMAIN' => Env.getProjDomainPort(proj, 'fileio'),
 
         'PORT' => HOST_PORT,
 
@@ -24,7 +24,9 @@ def devConfig(proj, ssh)
 
         'S_T' => 'release',
 
-        'REDIS_SERVER' => '192.168.0.223:6379',
+        'S_T_HOST' => Setting.get('proj_host'),
+
+        'REDIS_SERVER' => Setting.get('redis_host'),
 
         'D_NAME' => 'localhost',
         'D_HOST' => '127.0.0.1',
@@ -42,24 +44,109 @@ def devConfig(proj, ssh)
 end 
 
 
-def devConfig_app()
 
+def createDev(proj, ssh)
+    path = getProjPath(proj)
+    ssh.exec! "mkdir -p #{path}config/development"
+end    
+
+def devNewConfig(proj, ssh)
+
+    path = getProjPath(proj)
+    
+
+
+    devConfig_app(proj, ssh)
+    devConfig_assets(proj, ssh)
+    devConfig_database(proj, ssh)
+    devConfig_queue(proj, ssh)
+
+end    
+
+
+def devConfig_app(proj, ssh)
+    createDev(proj, ssh)
+
+    path = getProjPath(proj)
+    mainPath = PATH + 'config/dev/app.php'
+
+    configs = {
+        'APP_NAME' => Env.getAppName(proj),
+        'ROOT_DOMAIN' => Env.getProjDomainPort(proj),
+
+        'WWW_DOMAIN' => Env.getProjDomainPort(proj, 'www'),
+        'STATIC_DOMAIN' => Env.getProjDomainPort(proj, 'static'),
+        'FILEIO_DOMAIN' => Env.getProjDomainPort(proj, 'fileio'),
+
+    }
+
+    configs = replaceString(mainPath, configs);
+
+
+    addMainPath = path + 'config/development/app.php'
+
+    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 
 end
 
 
-def devConfig_assets()
+def devConfig_assets(proj, ssh)
+    createDev(proj, ssh)
 
+    path = getProjPath(proj)
+    mainPath = PATH + 'config/dev/assets.php'
+
+    configs = {
+        'S_T' => 'release',
+        'S_T_HOST' => Setting.get('proj_host'),
+    }
+
+    configs = replaceString(mainPath, configs);
+
+
+    addMainPath = path + 'config/development/assets.php'
+    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 end  
 
 
-def devConfig_database()
+def devConfig_database(proj, ssh)
+    createDev(proj, ssh)
 
+    path = getProjPath(proj)
+    mainPath = PATH + 'config/dev/database.php'
+
+    configs = {
+        'D_NAME' => 'localhost',
+        'D_HOST' => '127.0.0.1',
+        'D_DB' => Env.getProjDomainDbName(proj),
+        'D_USER' => Env.getDbUserName(proj),
+        'D_PWD' => Env.getDbPwd(proj)
+
+    }
+
+    configs = replaceString(mainPath, configs);
+
+
+    addMainPath = path + 'config/development/database.php'
+    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 end  
 
 
-def devConfig_queue()
+def devConfig_queue(proj, ssh)
+    createDev(proj, ssh)
 
+    path = getProjPath(proj)
+    mainPath = PATH + 'config/dev/queue.php'
+
+    configs = {
+        'REDIS_SERVER' => Setting.get('redis_host'),
+
+    }
+
+    configs = replaceString(mainPath, configs);
+
+    addMainPath = path + 'config/development/queue.php'
+    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 end  
 
 
@@ -82,14 +169,42 @@ def composer(proj, ssh)
     #ln -s
     path = getProjPath(proj)
     ssh.exec "cp -R #{COMPOSER_PATH} #{path}"
-
-
 end 
 
+
+
+def checkPhpmig(proj, ssh)
+    path = getProjPath(proj)
+    ssh.exec!("[ -f '#{path}script/phpmig.php' ] && echo 1")
+end
+
+def migrate(proj, ssh)
+    
+    if !Env.createUser?
+        path = getProjPath(proj)
+
+
+        puts  checkPhpmig(proj, ssh)
+
+        puts '@@'
+
+        while ssh.exec!("[ -f '#{path}script/phpmig.php' ] && echo 1") == '1'
+            ssh.exec "ENV=production #{path}script/phpmig.php migrate"
+            break
+        end
+
+        
+    end    
+end 
+
+
 def initData(proj, ssh)
-    Dir.chdir(getProjPath(proj))
-    p `pwd`
-    `ENV=production ./script/phpming.php migrate`
+    
+    if Env.createUser?
+
+        #`ENV=production ./script/phpming.php migrate`
+    end 
+
 end 
 
 
@@ -142,8 +257,8 @@ def buildNginx(proj, ssh)
     projPublicPath = getProjPath(proj) + 'public'
 
     str = {
-        'server_name' => Env.getProjDomain(proj),
-        'server_port' => HOST_PORT,
+        'server_name' => Env.getProjDomain(proj, :www),
+        'server_port' => HOST_PORT ? HOST_PORT : 80,
         'root' => projPublicPath,
         'log_path' =>  '/var/log/nginx/',
         'static_name' => Env.getProjDomain(proj, :static),
@@ -171,8 +286,8 @@ def addDbUser(proj, ssh)
     if Env.createUser?
         dbconfig = PATH + 'config/user.sql'
         str = {
-            'dbuser' => getDbUserName(proj),
-            'password' => getDbPwd(proj),
+            'dbuser' => Env.getDbUserName(proj),
+            'password' => Env.getDbPwd(proj),
             'host' =>  'localhost',
             'dbname' => Env.getProjDomainDbName(proj),
         }

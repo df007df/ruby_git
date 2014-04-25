@@ -112,16 +112,14 @@ Setting.load opts[:c]
 
 
 Env.type = Setting.get 'type'
-proj = Setting.get('branch').split('/')
+proj = Setting.get('branch')
 
-if proj.size != 2
+if proj.empty?
 	Env.exit 'branch error'
 end	
 
+
 require 'config'
-
-
-proj = proj[1]
 
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	initGit(proj, ssh)
