@@ -175,21 +175,17 @@ end
 
 def checkPhpmig(proj, ssh)
     path = getProjPath(proj)
-    ssh.exec!("[ -f '#{path}script/phpmig.php' ] && echo 1")
+    status = ssh.exec!("[ -f '#{path}script/phpmig.php' ] && echo 1")
+    status.strip
 end
 
 def migrate(proj, ssh)
     
     if !Env.createUser?
         path = getProjPath(proj)
-
-
-        puts  checkPhpmig(proj, ssh)
-
-        puts '@@'
-
-        while ssh.exec!("[ -f '#{path}script/phpmig.php' ] && echo 1") == '1'
-            ssh.exec "ENV=production #{path}script/phpmig.php migrate"
+        while checkPhpmig(proj, ssh) == '1'
+            command = "cd #{path}; ENV=production ./script/phpmig.php migrate"
+            ssh.exec command
             break
         end
 
@@ -201,8 +197,12 @@ end
 def initData(proj, ssh)
     
     if Env.createUser?
-
-        #`ENV=production ./script/phpming.php migrate`
+        path = getProjPath(proj)
+        while checkPhpmig(proj, ssh) == '1'
+            command = "cd #{path}; ENV=production ./script/phpmig.php up init"
+            ssh.exec command
+            break
+        end
     end 
 
 end 
