@@ -136,8 +136,8 @@ class Env
 
 
 	def self.exit(info)
-		puts info
-		exit! 1
+		self.mg info
+		exit! 0
 	end	
 
 	def self.mg(message)

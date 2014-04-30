@@ -146,7 +146,10 @@ end
 def checkPhpmig(proj, ssh)
     path = getProjPath(proj)
     status = ssh.exec!("[ -f '#{path}script/phpmig.php' ] && echo 1")
-    status.strip
+    if status
+        status.strip
+    end    
+    
 end
 
 def migrate(proj, ssh)
