@@ -9,7 +9,6 @@ require 'json'
 
 
 require 'model/depository'
-require 'model/local'
 require 'model/remote'
 require 'model/setting'
 require 'model/env'
@@ -121,6 +120,8 @@ end
 
 require 'config'
 
+Env.mg 'push is start!'
+
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	initGit(proj, ssh)
 
@@ -128,7 +129,7 @@ loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh|
 }
 
 
-
+	
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	cPostUpdate(proj, ssh)
 
@@ -159,15 +160,12 @@ loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh|
 
 
 
-#Local.pushBarnch(proj)
-
-
-
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	
 	Env.process(proj, ssh)
-	Env.pp 20
+
+	Env.mg 'all is ok!'
+
+		
 }
-
-
 

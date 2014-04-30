@@ -1,3 +1,5 @@
+require 'time' 
+
 class Env
 
 	@@type = 'release'  #release || proj
@@ -89,7 +91,7 @@ class Env
 		type = self._getDomainType()
 		
 		if self.createUser?
-			"saas_#{proj}"
+			"#{type}_#{proj}"
 		else	
 			RELEASE_DB_USER
 		end	
@@ -114,9 +116,9 @@ class Env
 		#devConfig(proj, ssh)
 		devNewConfig(proj, ssh)
 
-  		chmodFile(proj, ssh)
+		composer(proj, ssh)
 
-  		composer(proj, ssh)
+  		chmodFile(proj, ssh)
 
 		migrate(proj, ssh)
 
@@ -129,9 +131,6 @@ class Env
 
 
 	def self.pp(n)
-
-		print "|" + '='*n + "| #{n}% \r"
-		$stdout.flush
 		sleep 1
 	end	
 
@@ -141,5 +140,12 @@ class Env
 		exit! 1
 	end	
 
+	def self.mg(message)
+
+		t = Time.now
+		format="%Y-%m-%d %H:%M:%S" 
+		p message + " [" + t.strftime(format) + ']'
+
+	end	
 
 end	

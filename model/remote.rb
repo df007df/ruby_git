@@ -3,48 +3,6 @@ def getProjPath(proj)
 end
 
 
-
-
-def devConfig(proj, ssh)
-    path = getProjPath(proj)
-
-    mainPath = PATH + 'config/main.php'
-    configs = {
-        'APP_NAME' => Env.getAppName(proj),
-        'ROOT_DOMAIN' => Env.getProjDomainPort(proj),
-
-        'WWW_DOMAIN' => Env.getProjDomainPort(proj, 'www'),
-        'STATIC_DOMAIN' => Env.getProjDomainPort(proj, 'static'),
-        'FILEIO_DOMAIN' => Env.getProjDomainPort(proj, 'fileio'),
-
-        'PORT' => HOST_PORT,
-
-        'M_S' => 'localhost',
-        'M_S_P' => '11211',
-
-        'S_T' => 'release',
-
-        'S_T_HOST' => Setting.get('proj_host'),
-
-        'REDIS_SERVER' => Setting.get('redis_host'),
-
-        'D_NAME' => 'localhost',
-        'D_HOST' => '127.0.0.1',
-        'D_DB' => Env.getProjDomainDbName(proj),
-        'D_USER' => Env.getDbUserName(proj),
-        'D_PWD' => Env.getDbPwd(proj)
-    }
-
-    configs = replaceString(mainPath, configs);
-
-
-    addMainPath = path + 'config/development.php'
-    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
-
-end 
-
-
-
 def createDev(proj, ssh)
     path = getProjPath(proj)
     ssh.exec! "mkdir -p #{path}config/development"
@@ -61,6 +19,7 @@ def devNewConfig(proj, ssh)
     devConfig_database(proj, ssh)
     devConfig_queue(proj, ssh)
 
+    Env.mg('config ok!')
 end    
 
 
@@ -87,6 +46,7 @@ def devConfig_app(proj, ssh)
 
     ssh.exec "echo \"#{configs}\" > #{addMainPath}"
 
+     Env.mg('app config ok!')
 end
 
 
@@ -106,6 +66,8 @@ def devConfig_assets(proj, ssh)
 
     addMainPath = path + 'config/development/assets.php'
     ssh.exec "echo \"#{configs}\" > #{addMainPath}"
+
+    Env.mg('assets config ok!')
 end  
 
 
@@ -129,6 +91,8 @@ def devConfig_database(proj, ssh)
 
     addMainPath = path + 'config/development/database.php'
     ssh.exec "echo \"#{configs}\" > #{addMainPath}"
+
+    Env.mg('database config ok!')
 end  
 
 
@@ -146,7 +110,9 @@ def devConfig_queue(proj, ssh)
     configs = replaceString(mainPath, configs);
 
     addMainPath = path + 'config/development/queue.php'
-    ssh.exec "echo \"#{configs}\" > #{addMainPath}"
+    ssh.exec! "echo \"#{configs}\" > #{addMainPath}"
+
+    Env.mg('queue config ok!')
 end  
 
 
@@ -160,7 +126,9 @@ def chmodFile(proj, ssh)
     logPath = getProjPath(proj) + 'log'
 
     ssh.exec "mkdir -p #{uploadPath} && chmod 777 #{uploadPath}"
-    ssh.exec "chmod 777 #{logPath}"
+    ssh.exec! "chmod 777 #{logPath}"
+
+    Env.mg('upload ok!')
 
 end 
 
@@ -168,7 +136,9 @@ end
 def composer(proj, ssh)
     #ln -s
     path = getProjPath(proj)
-    ssh.exec "cp -R #{COMPOSER_PATH} #{path}"
+    ssh.exec!("cp -R #{COMPOSER_PATH} #{path} && echo 1")
+
+    Env.mg('composer cp ok!')
 end 
 
 
@@ -184,8 +154,9 @@ def migrate(proj, ssh)
     if !Env.createUser?
         path = getProjPath(proj)
         while checkPhpmig(proj, ssh) == '1'
-            command = "cd #{path}; ENV=production ./script/phpmig.php migrate"
+            command = "cd #{path}; ./script/phpmig.php migrate"
             ssh.exec command
+            Env.mg('migrate ok!')
             break
         end
 
@@ -199,8 +170,9 @@ def initData(proj, ssh)
     if Env.createUser?
         path = getProjPath(proj)
         while checkPhpmig(proj, ssh) == '1'
-            command = "cd #{path}; ENV=production ./script/phpmig.php up init"
-            ssh.exec command
+            ssh.exec "cd #{path}; ./script/phpmig.php up init && ./script/phpmig.php up initdata"
+
+            Env.mg('database init and initdata ok!')
             break
         end
     end 
@@ -225,7 +197,7 @@ def initGit(proj, ssh)
     ssh.exec! "git config -f #{path}.git/config receive.denyCurrentBranch ignore"
     config = ssh.exec! "git config --get -f #{path}.git/config receive.denyCurrentBranch"
     if /ignore/iu =~ config
-        puts 'git init ok!'
+        Env.mg 'git init ok!'
     else
         Env.exit 'git init error config!'
     end
@@ -294,10 +266,14 @@ def addDbUser(proj, ssh)
 
         sql = replaceString(dbconfig, str);
 
-        tmpSql = "/tmp/#{proj}_sql"
+        tmpSql = "/tmp/#{proj}_sql" 
 
-        puts ssh.exec "echo '#{sql}' > #{tmpSql} && mysql --user=#{DB_USER} --password=#{DB_PWD} < #{tmpSql}"
+        commandTmp = "echo \"#{sql}\" > #{tmpSql}"
+        command = "mysql --user='#{DB_USER}' --password='#{DB_PWD}' < #{tmpSql}"
 
+        ssh.exec(commandTmp + ' && ' + command)
+
+        Env.mg 'db adduser ok!' 
     end    
     
 
