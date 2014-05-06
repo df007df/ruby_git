@@ -126,6 +126,8 @@ class Env
 
 		#copyFileIo(proj, ssh)
 
+		startQueue(proj, ssh)
+
 	end	
 
 

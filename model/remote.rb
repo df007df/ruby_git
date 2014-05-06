@@ -188,6 +188,13 @@ def copyFileIo(proj, ssh)
 end 
 
 
+def startQueue(proj, ssh)
+
+    command = "cd #{path}; sudo ./deploy/resque restart"
+    ssh.exec command
+    Env.mg('queue ok!')
+end 
+
 
 
 def initGit(proj, ssh) 
