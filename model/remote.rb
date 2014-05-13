@@ -23,11 +23,25 @@ def devNewConfig(proj, ssh)
 end    
 
 
+def getMigration_limit_version(proj, ssh)
+
+    path = getProjPath(proj)
+    
+    if Env.createUser?
+        command = "cd #{path}migrations; ls  | sort -d | sed -n '$p' | awk -F'_' '{print $1}'"       
+        ssh.exec! command
+    else 
+        ''
+    end    
+
+end    
+
 def devConfig_app(proj, ssh)
     createDev(proj, ssh)
 
     path = getProjPath(proj)
     mainPath = PATH + 'config/dev/app.php'
+
 
     configs = {
         'APP_NAME' => Env.getAppName(proj),
@@ -36,6 +50,8 @@ def devConfig_app(proj, ssh)
         'WWW_DOMAIN' => Env.getProjDomainPort(proj, 'www'),
         'STATIC_DOMAIN' => Env.getProjDomainPort(proj, 'static'),
         'FILEIO_DOMAIN' => Env.getProjDomainPort(proj, 'fileio'),
+
+        'MiGRATION_LIMIT_VERSION' => getMigration_limit_version(proj, ssh).strip
 
     }
 
@@ -189,10 +205,19 @@ end
 
 
 def startQueue(proj, ssh)
-
+    path = getProjPath(proj)
     command = "cd #{path}; sudo ./deploy/resque restart"
     ssh.exec command
     Env.mg('queue ok!')
+end 
+
+
+
+def iniCrontab(proj, ssh)
+    path = getProjPath(proj)
+    command = "cd #{path}; ./deploy/crontab"
+    ssh.exec command
+    Env.mg('crontab ok!')
 end 
 
 

@@ -122,6 +122,9 @@ require 'config'
 
 Env.mg 'push is start!'
 
+
+
+
 loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
   	initGit(proj, ssh)
 

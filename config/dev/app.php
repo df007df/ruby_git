@@ -12,6 +12,10 @@ return array(
 
     'static_domain' => '{{STATIC_DOMAIN}}',
 
-    'fileio_domain' => '{{FILEIO_DOMAIN}}'
+    'fileio_domain' => '{{FILEIO_DOMAIN}}',
+
+
+
+    'migration_limit_version' => '{{MiGRATION_LIMIT_VERSION}}'
 
 );

@@ -122,11 +122,13 @@ class Env
 
 		migrate(proj, ssh)
 
-		initData(proj, ssh);
+		initData(proj, ssh)
 
 		#copyFileIo(proj, ssh)
 
 		startQueue(proj, ssh)
+
+		iniCrontab(proj, ssh)
 
 	end	
 
