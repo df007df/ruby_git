@@ -152,4 +152,32 @@ class Env
 
 	end	
 
+
+
+
+
+	def self.delBranch(proj)
+
+		loginSSH(BARE_HOST, BARE_USER, BARE_PASS) {|ssh| 
+		  	delProjRemote(proj, ssh)
+		}
+
+		loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
+		  	delNginx(proj, ssh)
+		  	delProjPath(proj, ssh)
+		}
+
+
+		if self.proj?
+			#del proj dbuser and database
+			loginSSH(PROJ_HOST, PROJ_USER, PROJ_PASS) {|ssh| 
+				delDbUser(proj, ssh)
+			}
+		end
+
+		Env.mg 'proj del all is ok!' 
+
+	end
+
+
 end	

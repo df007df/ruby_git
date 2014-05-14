@@ -32,7 +32,7 @@ def addProjRemote(proj, ssh)
 	
 	 	moveHeads(Setting.get('copybranch'), barnch, ssh);
 
-	 	ssh.exec "cd #{BARE_PATH}; #{pushProj}"
+	 	puts ssh.exec! "cd #{BARE_PATH}; #{pushProj}"
 	else
 	 	Env.exit "#{barnch} remote is exists"	
 	end	
@@ -50,5 +50,18 @@ def moveHeads(proj, newproj, ssh)
 	ssh.exec "sudo su git -c 'cp #{projH} #{newprojH}'"
 end
 
+
+
+def delProjRemote(proj, ssh)
+	barnch = Env.getBranch(proj)
+	delremote = "sudo su git -c 'git remote rm #{barnch}'"
+	delBranch = "sudo su git -c 'git branch -D #{barnch}'"
+
+	ssh.exec "cd #{BARE_PATH}; #{delremote}"
+	ssh.exec "cd #{BARE_PATH}; #{delBranch}"
+
+	Env.mg 'remote del is ok!'
+
+end
 
 

@@ -101,6 +101,7 @@ opts = Slop.parse do
     puts "Version 1.0"
   end
   on 'c=', 'config json'
+  on 'd=', 'del branch'
 end
 
 if !opts[:c] || opts[:c].empty?
@@ -117,8 +118,15 @@ if proj.empty?
 	Env.exit 'branch error'
 end	
 
-
 require 'config'
+
+
+
+if opts[:d]
+Env.delBranch(proj)
+exit
+end	
+
 
 Env.mg 'push is start!'
 

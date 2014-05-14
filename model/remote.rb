@@ -256,6 +256,14 @@ def cPostUpdate(proj, ssh)
 end 
 
 
+def delProjPath(proj, ssh)
+
+    path = getProjPath(proj)
+    ssh.exec "sudo rm -R #{path}"
+
+    Env.mg 'projpath del is ok!'
+end    
+
 
 
 def buildNginx(proj, ssh)
@@ -288,28 +296,64 @@ end
 
 
 
-def addDbUser(proj, ssh)
+def delNginx(proj, ssh)
+    nginxPath = PROJ_NGINX_PATH
+    server_name = Env.getProjDomain(proj, :www)
 
-    if Env.createUser?
-        dbconfig = PATH + 'config/user.sql'
+    newPath = nginxPath + 'sites-available/' + server_name
+    enaPath = nginxPath + 'sites-enabled/' + server_name
+
+    ssh.exec "sudo rm #{newPath} && sudo rm #{enaPath}"
+
+    Env.mg 'nginx del is ok!' 
+
+end    
+
+
+
+    def addDbUser(proj, ssh)
+
+        if Env.createUser?
+            dbconfig = PATH + 'config/user.sql'
+            str = {
+                'dbuser' => Env.getDbUserName(proj),
+                'password' => Env.getDbPwd(proj),
+                'host' =>  'localhost',
+                'dbname' => Env.getProjDomainDbName(proj),
+            }
+
+            sql = replaceString(dbconfig, str);
+
+            tmpSql = "/tmp/#{proj}_sql" 
+
+            commandTmp = "echo \"#{sql}\" > #{tmpSql}"
+            command = "mysql --user='#{DB_USER}' --password='#{DB_PWD}' < #{tmpSql}"
+
+            ssh.exec(commandTmp + ' && ' + command)
+
+            Env.mg 'db adduser ok!' 
+        end
+
+    end    
+
+
+
+
+    def delDbUser(proj, ssh)    
+        dbconfig = PATH + 'config/deldb.sql'
         str = {
             'dbuser' => Env.getDbUserName(proj),
-            'password' => Env.getDbPwd(proj),
             'host' =>  'localhost',
             'dbname' => Env.getProjDomainDbName(proj),
         }
 
         sql = replaceString(dbconfig, str);
 
-        tmpSql = "/tmp/#{proj}_sql" 
+        tmpSql = "/tmp/#{proj}_delsql" 
 
         commandTmp = "echo \"#{sql}\" > #{tmpSql}"
         command = "mysql --user='#{DB_USER}' --password='#{DB_PWD}' < #{tmpSql}"
 
         ssh.exec(commandTmp + ' && ' + command)
-
-        Env.mg 'db adduser ok!' 
+        Env.mg 'db+user del is ok!' 
     end    
-    
-
-end 
