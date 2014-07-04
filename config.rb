@@ -18,7 +18,6 @@ DB_PWD  = Setting.get('db_rootpwd')
 
 
 
-
 BARE_HOST = Setting.get('bare_host')
 BARE_PATH = Setting.get('bare_path')
 BARE_USER = Setting.get('bare_user')

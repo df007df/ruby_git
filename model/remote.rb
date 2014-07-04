@@ -170,7 +170,7 @@ end
 
 def migrate(proj, ssh)
     
-    if !Env.createUser?
+    if !Env.phpmigMigrate?
         path = getProjPath(proj)
         while checkPhpmig(proj, ssh) == '1'
             command = "cd #{path}; ./script/phpmig.php migrate"
@@ -186,7 +186,7 @@ end
 
 def initData(proj, ssh)
     
-    if Env.createUser?
+    if Env.phpmigInit?
         path = getProjPath(proj)
         while checkPhpmig(proj, ssh) == '1'
             ssh.exec "cd #{path}; ./script/phpmig.php up init && ./script/phpmig.php up initdata"
@@ -194,6 +194,12 @@ def initData(proj, ssh)
             Env.mg('database init and initdata ok!')
             break
         end
+
+
+        version = getMigration_limit_version(proj, ssh).strip
+        command = "cd #{path}; ./deploy/phpmig_up #{version}"
+        ssh.exec command
+        
     end 
 
 end 
@@ -292,7 +298,7 @@ def buildNginx(proj, ssh)
 
     ssh.exec "sudo service nginx restart"
 
-end 
+end
 
 
 
@@ -309,9 +315,22 @@ def delNginx(proj, ssh)
 
 end    
 
+    
+    def addDb(proj, ssh)
+        dbname = Env.getProjDomainDbName(proj)
+        command = "mysql --user='#{DB_USER}' --password='#{DB_PWD}' -e'CREATE DATABASE IF NOT EXISTS #{dbname};' "
+        ssh.exec(command)
+        Env.mg 'db createDb ok!' 
+    end
 
 
     def addDbUser(proj, ssh)
+
+
+        if Env.createDb?
+            addDb(proj, ssh)
+        end
+
 
         if Env.createUser?
             dbconfig = PATH + 'config/user.sql'
@@ -334,8 +353,19 @@ end
             Env.mg 'db adduser ok!' 
         end
 
-    end    
+    end
 
+
+
+     
+
+
+    def delDb(proj, ssh)
+
+
+
+
+    end    
 
 
 

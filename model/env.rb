@@ -50,6 +50,19 @@ class Env
 		(Setting.get('db_createuser') == '1')
 	end	
 
+	def self.createDb?
+		(Setting.get('db_create') == '1')
+	end	
+
+
+	def self.phpmigInit?
+		(Setting.get('phpmig_init') == '1')
+	end	
+
+	def self.phpmigMigrate?
+		(Setting.get('phpmig_migrate') == '1')
+	end	
+
 
 	def self.getCopyBranch
 		COPY_BRANCH
@@ -76,7 +89,7 @@ class Env
 	def self.getProjDomainDbName (proj)
 		type = self._getDomainType()
 
-		if self.createUser?
+		if self.createDb?
 			"#{type}_#{proj}"
 		else	
 			RELEASE_DB_NAME
@@ -120,9 +133,10 @@ class Env
 
   		chmodFile(proj, ssh)
 
+  		initData(proj, ssh)
+
 		migrate(proj, ssh)
 
-		initData(proj, ssh)
 
 		#copyFileIo(proj, ssh)
 
