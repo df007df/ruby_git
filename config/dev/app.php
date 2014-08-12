@@ -14,8 +14,11 @@ return array(
 
     'fileio_domain' => '{{FILEIO_DOMAIN}}',
 
+    'resque_sync' => true,
 
 
     'migration_limit_version' => '{{MiGRATION_LIMIT_VERSION}}'
+
+
 
 );
