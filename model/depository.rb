@@ -25,14 +25,16 @@ def addProjRemote(proj, ssh)
 	addremote = "git remote add #{barnch} #{PROJ_USER}@#{PROJ_HOST}:#{projpath}"
 	pushProj = "sudo su git -c 'git push #{barnch} #{barnch}:#{barnch}'"
 
-    Env.mg 'remote is start!'
+	pushBitBuckent = "sudo su git -c 'git push origin #{barnch}:#{barnch}' "
+
+    	Env.mg 'remote is start!'
 
 	if !checkRemote(barnch, ssh)
 	 	ssh.exec "cd #{BARE_PATH}; #{addremote}"
 	
 	 	moveHeads(Setting.get('copybranch'), barnch, ssh);
 
-	 	puts ssh.exec! "cd #{BARE_PATH}; #{pushProj}"
+	 	puts ssh.exec! "cd #{BARE_PATH}; #{pushProj}; #{pushBitBuckent}"
 	else
 	 	Env.exit "#{barnch} remote is exists"	
 	end	
