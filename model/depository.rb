@@ -49,7 +49,11 @@ def moveHeads(proj, newproj, ssh)
 
 	projH = "#{BARE_PATH}#{headsPath}#{proj}"
 	newprojH = "#{BARE_PATH}#{headsPath}#{newproj}"
-	ssh.exec "sudo su git -c 'cp #{projH} #{newprojH}'"
+
+	status = ssh.exec!("[ !-f '#{newprojH}' ] && echo 1")
+	if status
+	    ssh.exec "sudo su git -c 'cp #{projH} #{newprojH}'"	
+	end 
 end
 
 
